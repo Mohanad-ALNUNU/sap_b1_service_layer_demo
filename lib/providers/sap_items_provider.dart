@@ -33,6 +33,9 @@ class SapItemsProvider with ChangeNotifier {
   String? get lastExecutedUrl => _lastExecutedUrl;
   int? get lastDurationMs => _lastDurationMs;
 
+  // Un rafraîchissement ou une nouvelle recherche démarre un nouvel ensemble
+  // de données. La première notification affiche l'état de chargement ; la
+  // seconde publie les données ou l'erreur.
   Future<void> fetchInitial(String baseUrl) async {
     _isLoadingInitial = true;
     _errorMessage = null;
@@ -64,6 +67,9 @@ class SapItemsProvider with ChangeNotifier {
   }
 
   Future<void> fetchNextPage(String baseUrl) async {
+    // Les événements de scroll peuvent se déclencher plusieurs fois. Ces garde-
+    // fussent empêchent les doublons pendant le chargement et arrêtent la
+    // pagination après la dernière page.
     if (_isLoadingMore || _isLoadingInitial || !_hasMore) return;
 
     _isLoadingMore = true;
@@ -79,6 +85,9 @@ class SapItemsProvider with ChangeNotifier {
 
       _items.addAll(response.items);
       _hasMore = response.hasMore;
+      // currentSkip représente le nombre d'enregistrements déjà présents dans
+      // la mémoire locale ; la prochaine requête OData commencera donc après
+      // ces éléments.
       _currentSkip += response.items.length;
       _lastExecutedUrl = response.executedUrl;
       _lastDurationMs = response.durationMs;
@@ -92,6 +101,8 @@ class SapItemsProvider with ChangeNotifier {
   }
 
   Future<void> search(String query, String baseUrl) async {
+    // fetchInitial() vide le résultat précédent pour éviter d'ajouter les
+    // données filtrées à la liste de la requête précédente.
     _searchQuery = query.trim();
     await fetchInitial(baseUrl);
   }

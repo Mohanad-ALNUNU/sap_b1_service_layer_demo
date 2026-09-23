@@ -41,6 +41,8 @@ class _SapClientsScreenState extends State<SapClientsScreen> {
 
   void _loadInitialData() {
     final baseUrl = context.read<SapAuthProvider>().config.cleanBaseUrl;
+    // read() est une lecture ponctuelle ici ; le provider notifiera ensuite le
+    // build() lorsque la requête asynchrone changera son état.
     context.read<SapClientsProvider>().fetchInitial(baseUrl);
   }
 
@@ -52,6 +54,8 @@ class _SapClientsScreenState extends State<SapClientsScreen> {
 
     if (currentScroll >= (maxScroll - 200)) {
       final baseUrl = context.read<SapAuthProvider>().config.cleanBaseUrl;
+      // La pagination est protégée par le provider, ce qui évite les appels
+      // dupliqués quand plusieurs événements de scroll arrivent proches.
       context.read<SapClientsProvider>().fetchNextPage(baseUrl);
     }
   }
@@ -63,6 +67,8 @@ class _SapClientsScreenState extends State<SapClientsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // watch() reconstruit cet écran après notifyListeners(), tandis que read()
+    // suffit pour la configuration d'authentification utilisée pour créer les URLs.
     final clientsProvider = context.watch<SapClientsProvider>();
     final auth = context.read<SapAuthProvider>();
 
@@ -80,7 +86,8 @@ class _SapClientsScreenState extends State<SapClientsScreen> {
           IconButton(
             icon: const Icon(Icons.refresh),
             tooltip: 'Recharger',
-            onPressed: () => clientsProvider.fetchInitial(auth.config.cleanBaseUrl),
+            onPressed: () =>
+                clientsProvider.fetchInitial(auth.config.cleanBaseUrl),
           ),
         ],
       ),
@@ -96,9 +103,9 @@ class _SapClientsScreenState extends State<SapClientsScreen> {
                 'Le filtre "\$filter=CardType eq \'cCustomer\'" isole les clients. '
                 'La pagination "\$skip=${clientsProvider.currentSkip}" charge les résultats par lots de 20.',
           ),
-
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
             child: TextField(
               controller: _searchController,
               decoration: InputDecoration(
@@ -115,7 +122,8 @@ class _SapClientsScreenState extends State<SapClientsScreen> {
                     : null,
                 filled: true,
                 fillColor: Colors.white,
-                contentPadding: const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
+                contentPadding:
+                    const EdgeInsets.symmetric(vertical: 0, horizontal: 16),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: BorderSide(color: Colors.grey.shade300),
@@ -129,9 +137,9 @@ class _SapClientsScreenState extends State<SapClientsScreen> {
               textInputAction: TextInputAction.search,
             ),
           ),
-
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 18.0, vertical: 6.0),
+            padding:
+                const EdgeInsets.symmetric(horizontal: 18.0, vertical: 6.0),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
@@ -146,11 +154,13 @@ class _SapClientsScreenState extends State<SapClientsScreen> {
                 if (clientsProvider.hasMore)
                   Row(
                     children: [
-                      Icon(Icons.autorenew, size: 14, color: Colors.green.shade700),
+                      Icon(Icons.autorenew,
+                          size: 14, color: Colors.green.shade700),
                       const SizedBox(width: 4),
                       Text(
                         'Défilez pour charger la suite',
-                        style: TextStyle(fontSize: 11, color: Colors.green.shade700),
+                        style: TextStyle(
+                            fontSize: 11, color: Colors.green.shade700),
                       ),
                     ],
                   )
@@ -162,7 +172,6 @@ class _SapClientsScreenState extends State<SapClientsScreen> {
               ],
             ),
           ),
-
           Expanded(
             child: _buildListContent(clientsProvider, auth),
           ),
@@ -211,7 +220,8 @@ class _SapClientsScreenState extends State<SapClientsScreen> {
               ),
               const SizedBox(height: 16),
               ElevatedButton.icon(
-                onPressed: () => provider.fetchInitial(auth.config.cleanBaseUrl),
+                onPressed: () =>
+                    provider.fetchInitial(auth.config.cleanBaseUrl),
                 icon: const Icon(Icons.refresh),
                 label: const Text('Réessayer'),
                 style: ElevatedButton.styleFrom(

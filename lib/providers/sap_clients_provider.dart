@@ -33,6 +33,9 @@ class SapClientsProvider with ChangeNotifier {
   String? get lastExecutedUrl => _lastExecutedUrl;
   int? get lastDurationMs => _lastDurationMs;
 
+  // Un rafraîchissement ou une nouvelle recherche remplace le jeu de données
+  // courant. En gardant cette réinitialisation dans le provider, tous les
+  // écrans suivent les mêmes règles de pagination.
   Future<void> fetchInitial(String baseUrl) async {
     _isLoadingInitial = true;
     _errorMessage = null;
@@ -64,6 +67,8 @@ class SapClientsProvider with ChangeNotifier {
   }
 
   Future<void> fetchNextPage(String baseUrl) async {
+    // Le listener du scroll peut se déclencher plusieurs fois près du seuil.
+    // Ces garde-fous évitent les appels dupliqués et gardent l'ordre des pages.
     if (_isLoadingMore || _isLoadingInitial || !_hasMore) return;
 
     _isLoadingMore = true;
@@ -79,6 +84,8 @@ class SapClientsProvider with ChangeNotifier {
 
       _clients.addAll(response.items);
       _hasMore = response.hasMore;
+      // currentSkip est un offset OData, pas un numéro de page. On avance selon
+      // la taille réelle de la réponse, car la dernière page peut être plus courte.
       _currentSkip += response.items.length;
       _lastExecutedUrl = response.executedUrl;
       _lastDurationMs = response.durationMs;
@@ -92,6 +99,8 @@ class SapClientsProvider with ChangeNotifier {
   }
 
   Future<void> search(String query, String baseUrl) async {
+    // Une recherche repart à l'offset zéro via fetchInitial(), ce qui vide
+    // aussi les résultats issus de la requête précédente.
     _searchQuery = query.trim();
     await fetchInitial(baseUrl);
   }

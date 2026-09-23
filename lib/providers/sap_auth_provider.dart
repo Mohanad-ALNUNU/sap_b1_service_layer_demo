@@ -33,11 +33,18 @@ class SapAuthProvider with ChangeNotifier {
   String? get username => _sessionManager.username;
   Duration get remainingSessionTime => _sessionManager.remainingTime;
 
+  // Appelé avant runApp pour que les paramètres enregistrés soient déjà
+  // disponibles quand l'écran de connexion est construit. notifyListeners()
+  // permet ensuite de rendre ces valeurs visibles dans les widgets qui
+  // utilisent context.watch<SapAuthProvider>().
   Future<void> init() async {
     _config = await SapConfig.load();
     notifyListeners();
   }
 
+  // Le provider est le propriétaire de l'état modifiable de la connexion.
+  // L'écran de login envoie simplement les valeurs ici, sans se soucier de la
+  // manière dont elles sont stockées ou sauvegardées.
   void updateConfig({
     String? serverUrl,
     String? companyDb,
@@ -52,6 +59,9 @@ class SapAuthProvider with ChangeNotifier {
   }
 
   Future<bool> login() async {
+    // Le chargement et les erreurs sont aussi des états. En publiant cette
+    // première mise à jour, l'interface peut désactiver le formulaire et
+    // afficher une progression pendant l'appel HTTP.
     _isLoading = true;
     _errorMessage = null;
     notifyListeners();
@@ -68,6 +78,8 @@ class SapAuthProvider with ChangeNotifier {
 
       _lastLoginDurationMs = result['durationMs'] as int?;
       _isLoading = false;
+      // SapServiceLayerClient stocke les cookies SAP dans le gestionnaire de
+      // session. Le provider publie ensuite l'état authentifié au dashboard.
       notifyListeners();
       return true;
     } catch (e) {
@@ -84,6 +96,8 @@ class SapAuthProvider with ChangeNotifier {
 
     await _client.logout(_config.cleanBaseUrl);
 
+    // logout() vide aussi le gestionnaire de session si SAP ne répond plus,
+    // pour éviter qu'une session expirée continue d'être affichée dans l'UI.
     _isLoading = false;
     _errorMessage = null;
     notifyListeners();

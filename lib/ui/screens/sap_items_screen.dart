@@ -41,6 +41,8 @@ class _SapItemsScreenState extends State<SapItemsScreen> {
 
   void _loadInitialData() {
     final baseUrl = context.read<SapAuthProvider>().config.cleanBaseUrl;
+    // read() récupère le provider sans s'abonner à ses rebuilds. Le provider
+    // exécute ensuite la requête et publie son état.
     context.read<SapItemsProvider>().fetchInitial(baseUrl);
   }
 
@@ -52,6 +54,8 @@ class _SapItemsScreenState extends State<SapItemsScreen> {
 
     if (currentScroll >= (maxScroll - 200)) {
       final baseUrl = context.read<SapAuthProvider>().config.cleanBaseUrl;
+      // Le provider garde la logique de protection pendant le chargement ; le
+      // listener peut donc demander la page suivante sans risque au bon moment.
       context.read<SapItemsProvider>().fetchNextPage(baseUrl);
     }
   }
@@ -63,6 +67,9 @@ class _SapItemsScreenState extends State<SapItemsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // watch() s'abonne à notifyListeners(). Les flags de chargement, les
+    // erreurs, les compteurs et les nouveaux éléments se reflètent donc dans
+    // l'interface.
     final itemsProvider = context.watch<SapItemsProvider>();
     final auth = context.read<SapAuthProvider>();
 

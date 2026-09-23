@@ -42,31 +42,6 @@ flutter run
 
 ---
 
-## 📤 Comment Pousser cette Application sur GitHub / GitLab
-
-Pour publier cette application comme un **dépôt Git indépendant** afin que d'autres personnes puissent apprendre :
-
-```bash
-# 1. Se positionner dans le dossier de l'application
-cd sap_b1_service_layer_demo
-
-# 2. Initialiser un nouveau dépôt Git
-git init
-
-# 3. Ajouter tous les fichiers
-git add .
-
-# 4. Effectuer le premier commit
-git commit -m "feat: initial commit - SAP Business One Service Layer Flutter demo"
-
-# 5. Lier votre dépôt distant (remplacez par votre URL de repo GitHub/GitLab)
-git branch -M main
-git remote add origin https://github.com/VOTRE_COMPTE/sap_b1_service_layer_demo.git
-
-# 6. Pousser vers GitHub
-git push -u origin main
-```
-
 ---
 
 ## 🧠 Principes Clés Expliqués
@@ -122,6 +97,28 @@ if (scrollController.position.pixels >= scrollController.position.maxScrollExten
   provider.fetchNextPage(baseUrl);
 }
 ```
+
+### 4. Comment fonctionne `Provider` dans cette démo ?
+
+Les classes `SapAuthProvider`, `SapItemsProvider` et `SapClientsProvider`
+étendent `ChangeNotifier`. Elles jouent le rôle de **magasin d'état** entre
+les écrans et le client HTTP :
+
+1. `main.dart` crée une instance de chaque provider avec `MultiProvider`.
+   L'instance reste partagée pour tous les widgets situés sous `MaterialApp`.
+2. L'écran déclenche une action avec `context.read<...>()`, par exemple
+   `fetchInitial()` après son affichage ou `fetchNextPage()` pendant le scroll.
+   `read` lit l'objet sans inscrire le widget à des reconstructions.
+3. Le provider appelle `SapServiceLayerClient`, conserve les données et met à
+   jour ses indicateurs (`isLoadingInitial`, `hasMore`, `errorMessage`, etc.).
+4. Après chaque changement important, `notifyListeners()` avertit les widgets
+   abonnés. `context.watch<...>()` dans `build()` reconstruit alors l'interface
+   avec le nouvel état.
+
+La séparation est volontaire : l'écran décrit **quoi faire et quoi afficher**,
+le provider orchestre **l'état et le cycle de chargement**, et le service
+contient **les détails HTTP/OData**. Ainsi, une recherche, un rafraîchissement
+ou un défilement utilisent tous les mêmes règles de pagination.
 
 ---
 

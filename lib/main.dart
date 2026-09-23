@@ -33,9 +33,15 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
+        // MultiProvider crée une seule instance partagée pour chaque feature.
+        // Tous les widgets sous MaterialApp peuvent ensuite récupérer ces objets
+        // avec context.read<T>() ou se reconstruire automatiquement lors de leurs
+        // changements via context.watch<T>().
         ChangeNotifierProvider<SapAuthProvider>.value(value: authProvider),
-        ChangeNotifierProvider<SapItemsProvider>(create: (_) => SapItemsProvider()),
-        ChangeNotifierProvider<SapClientsProvider>(create: (_) => SapClientsProvider()),
+        ChangeNotifierProvider<SapItemsProvider>(
+            create: (_) => SapItemsProvider()),
+        ChangeNotifierProvider<SapClientsProvider>(
+            create: (_) => SapClientsProvider()),
       ],
       child: const SapDemoApp(),
     ),
